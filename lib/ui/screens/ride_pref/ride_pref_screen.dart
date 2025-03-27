@@ -18,10 +18,11 @@ const String blablaHomeImagePath = 'assets/images/blabla_home.png';
 class RidePrefScreen extends StatelessWidget {
   const RidePrefScreen({super.key});
 
-  /// Handles user selection of a ride preference.
-  void onRidePrefSelected(BuildContext context, RidePreference newPreference) async {
-    context.read<RidesPreferencesProvider>().setCurrentPreference(newPreference);
-
+  void onRidePrefSelected(
+      BuildContext context, RidePreference newPreference) async {
+    context
+        .read<RidesPreferencesProvider>()
+        .setCurrentPreference(newPreference);
     await Navigator.of(context)
         .push(AnimationUtils.createBottomToTopRoute(const RidesScreen()));
   }
@@ -30,7 +31,8 @@ class RidePrefScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<RidesPreferencesProvider>();
     final RidePreference? currentRidePreference = provider.currentPreference;
-    final List<RidePreference> pastPreferences = provider.preferencesHistory;
+    final pastPreferences =
+        provider.pastPreferences; // Updated to use AsyncValue
 
     return Stack(
       children: [
@@ -66,16 +68,22 @@ class RidePrefScreen extends StatelessWidget {
                   SizedBox(height: BlaSpacings.m),
 
                   // 2.2 - Display past preferences if available
-                  if (pastPreferences.isNotEmpty)
+                  if (pastPreferences.isLoading)
+                    Center(child: CircularProgressIndicator())
+                  else if (pastPreferences.error != null)
+                    Center(child: Text('Error: ${pastPreferences.error}'))
+                  else if (pastPreferences.data != null &&
+                      pastPreferences.data!.isNotEmpty)
                     SizedBox(
-                      height: 200, 
+                      height: 200,
                       child: ListView.builder(
                         physics: AlwaysScrollableScrollPhysics(),
-                        itemCount: pastPreferences.length,
+                        itemCount: pastPreferences.data!.length,
                         itemBuilder: (ctx, index) => RidePrefHistoryTile(
-                          ridePref: pastPreferences[index],
-                          onPressed: () =>
-                              onRidePrefSelected(context, pastPreferences[index]),
+                          ridePref:
+                              pastPreferences.data![index], // Accessing data
+                          onPressed: () => onRidePrefSelected(
+                              context, pastPreferences.data![index]),
                         ),
                       ),
                     ),
