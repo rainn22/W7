@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../../../model/location/locations.dart';
 import '../../../../model/ride/ride_pref.dart';
 import '../../../theme/theme.dart';
@@ -11,8 +10,8 @@ import '../../../widgets/inputs/bla_location_picker.dart';
 import 'ride_pref_input_tile.dart';
 
 ///
-/// A Ride Preference From is a view to select:
-///   - A depcarture location
+/// A Ride Preference Form is a view to select:
+///   - A departure location
 ///   - An arrival location
 ///   - A date
 ///   - A number of seats
@@ -42,11 +41,13 @@ class _RidePrefFormState extends State<RidePrefForm> {
   // ----------------------------------
   // Initialize the Form attributes
   // ----------------------------------
-
   @override
   void initState() {
     super.initState();
+    _initializeForm();
+  }
 
+  void _initializeForm() {
     if (widget.initialPreference != null) {
       RidePreference current = widget.initialPreference!;
       departure = current.departure;
@@ -54,18 +55,29 @@ class _RidePrefFormState extends State<RidePrefForm> {
       departureDate = current.departureDate;
       requestedSeats = current.requestedSeats;
     } else {
-      // If no given preferences, we select default ones :
+      // If no given preferences, we select default ones:
       departure = null; // User shall select the departure
-      departureDate = DateTime.now(); // Now  by default
+      departureDate = DateTime.now(); // Now by default
       arrival = null; // User shall select the arrival
-      requestedSeats = 1; // 1 seat book by default
+      requestedSeats = 1; // 1 seat booked by default
+    }
+  }
+
+  // ----------------------------------
+  // Handle updates to the widget
+  // ----------------------------------
+  @override
+  void didUpdateWidget(RidePrefForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reinitialize the form if the initial preference has changed
+    if (oldWidget.initialPreference != widget.initialPreference) {
+      _initializeForm();
     }
   }
 
   // ----------------------------------
   // Handle events
   // ----------------------------------
-
   void onDeparturePressed() async {
     // 1- Select a location
     Location? selectedLocation = await Navigator.of(context).push<Location>(
@@ -74,7 +86,7 @@ class _RidePrefFormState extends State<RidePrefForm> {
       ),
     );
 
-    // 2- Update the from if needed
+    // 2- Update the form if needed
     if (selectedLocation != null) {
       setState(() {
         departure = selectedLocation;
@@ -90,7 +102,7 @@ class _RidePrefFormState extends State<RidePrefForm> {
       ),
     );
 
-    // 2- Update the from if needed
+    // 2- Update the form if needed
     if (selectedLocation != null) {
       setState(() {
         arrival = selectedLocation;
@@ -105,7 +117,7 @@ class _RidePrefFormState extends State<RidePrefForm> {
     bool isValid = hasDeparture && hasArrival;
 
     if (isValid) {
-      // 2 - Create a  new preference
+      // 2 - Create a new preference
       RidePreference newPreference = RidePreference(
         departure: departure!,
         departureDate: departureDate,
@@ -113,14 +125,14 @@ class _RidePrefFormState extends State<RidePrefForm> {
         requestedSeats: requestedSeats,
       );
 
-      // 3 - Callback withg the new preference
+      // 3 - Callback with the new preference
       widget.onSubmit(newPreference);
     }
   }
 
   void onSwappingLocationPressed() {
     setState(() {
-      // We switch only if both departure and arrivate are defined
+      // We switch only if both departure and arrival are defined
       if (departure != null && arrival != null) {
         Location temp = departure!;
         departure = Location.copy(arrival!);
@@ -136,8 +148,8 @@ class _RidePrefFormState extends State<RidePrefForm> {
       departure != null ? departure!.name : "Leaving from";
   String get arrivalLabel => arrival != null ? arrival!.name : "Going to";
 
-  bool get showDeparturePLaceHolder => departure == null;
-  bool get showArrivalPLaceHolder => arrival == null;
+  bool get showDeparturePlaceHolder => departure == null;
+  bool get showArrivalPlaceHolder => arrival == null;
 
   String get dateLabel => DateTimeUtils.formatDateTime(departureDate);
   String get numberLabel => requestedSeats.toString();
@@ -159,7 +171,7 @@ class _RidePrefFormState extends State<RidePrefForm> {
             children: [
               // 1 - Input the ride departure
               RidePrefInputTile(
-                isPlaceHolder: showDeparturePLaceHolder,
+                isPlaceHolder: showDeparturePlaceHolder,
                 title: departureLabel,
                 leftIcon: Icons.location_on,
                 onPressed: onDeparturePressed,
@@ -171,7 +183,7 @@ class _RidePrefFormState extends State<RidePrefForm> {
 
               // 2 - Input the ride arrival
               RidePrefInputTile(
-                isPlaceHolder: showArrivalPLaceHolder,
+                isPlaceHolder: showArrivalPlaceHolder,
                 title: arrivalLabel,
                 leftIcon: Icons.location_on,
                 onPressed: onArrivalPressed,
