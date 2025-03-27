@@ -12,58 +12,33 @@ import 'widgets/ride_pref_modal.dart';
 import 'widgets/rides_tile.dart';
 
 ///
-///  The Ride Selection screen allow user to select a ride, once ride preferences have been defined.
-///  The screen also allow user to re-define the ride preferences and to activate some filters.
+///  The Ride Selection screen allows users to select a ride, once ride preferences have been defined.
+///  The screen also allows users to re-define the ride preferences and activate some filters.
 ///
 class RidesScreen extends StatelessWidget {
   const RidesScreen({super.key});
 
-//   @override
-//   State<RidesScreen> createState() => _RidesScreenState();
-// }
+  RidePreference? getCurrentPreference(BuildContext context) {
+    return context.watch<RidesPreferencesProvider>().currentPreference;
+  }
 
-// class _RidesScreenState extends State<RidesScreen> {
-//   RidePreference get currentPreference =>
-//       RidePrefService.instance.currentPreference!;
+  List<Ride> getMatchingRides(BuildContext context) {
+    final currentFilter = RideFilter(); // Adjust this as needed
+    final currentPreference = getCurrentPreference(context);
+    return RidesService.instance.getRidesFor(currentPreference!, currentFilter);
+  }
 
-//   RideFilter currentFilter = RideFilter();
+  void onBackPressed(BuildContext context) {
+    Navigator.of(context).pop();
+  }
 
-//   List<Ride> get matchingRides =>
-//       RidesService.instance.getRidesFor(currentPreference, currentFilter);
-
-//   void onBackPressed() {
-//     // 1 - Back to the previous view
-//     Navigator.of(context).pop();
-//   }
-
-//   onRidePrefSelected(RidePreference newPreference) async {}
-
-//   void onPreferencePressed() async {
-//     // Open a modal to edit the ride preferences
-//     RidePreference? newPreference = await Navigator.of(
-//       context,
-//     ).push<RidePreference>(
-//       AnimationUtils.createTopToBottomRoute(
-//         RidePrefModal(initialPreference: currentPreference),
-//       ),
-//     );
-
-//     if (newPreference != null) {
-//       // 1 - Update the current preference
-//       RidePrefService.instance.setCurrentPreference(newPreference);
-
-//       // 2 -   Update the state   -- TODO MAKE IT WITH STATE MANAGEMENT
-//       setState(() {});
-//     }
-//   }
-
-//   void onFilterPressed() {}
-  void onRidePrefSelected(BuildContext context, RidePreference newPreference) async {
+  void onRidePrefSelected(BuildContext context, RidePreference newPreference) {
     final provider = context.read<RidesPreferencesProvider>();
     provider.setCurrentPreference(newPreference);
   }
 
-  void onPreferencePressed(BuildContext context, RidePreference currentPreference) async {
+  void onPreferencePressed(BuildContext context) async {
+    final currentPreference = getCurrentPreference(context);
     RidePreference? newPreference = await Navigator.of(context).push<RidePreference>(
       AnimationUtils.createTopToBottomRoute(
         RidePrefModal(initialPreference: currentPreference),
@@ -75,9 +50,11 @@ class RidesScreen extends StatelessWidget {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
+    final matchingRides = getMatchingRides(context);
+    final currentPreference = getCurrentPreference(context);
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.only(
@@ -87,14 +64,15 @@ class RidesScreen extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Top search Search bar
+            // Top search bar
             RidePrefBar(
-              ridePreference: currentPreference,
-              onBackPressed: onBackPressed,
-              onPreferencePressed: onPreferencePressed,
-              onFilterPressed: onFilterPressed,
+              ridePreference: currentPreference!,
+              onBackPressed: () => onBackPressed(context),
+              onPreferencePressed: () => onPreferencePressed(context),
+              onFilterPressed: () {
+                // Handle filter pressed
+              },
             ),
-
             Expanded(
               child: ListView.builder(
                 itemCount: matchingRides.length,
