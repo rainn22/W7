@@ -38,4 +38,6 @@ class RidePreference {
         'arrival: ${arrival.name}, '
         'requestedSeats: $requestedSeats)';
   }
+
+  static fromJson(String pref) {}
 }
